@@ -1,5 +1,5 @@
 # PlexSort
-Bulk renames filenames of TV show episodes according to season in a format easily recognized by Plex.
+Bulk renames filenames of TV show episodes according to season in a format easily recognized by Plex media servers.
 PlexSort is useful when you have a TV series with many episodes (> 99 only for this program) and need to rename every episode to a format like "ShowName s01e001.mkv".
 
 Written in C and currently only officialy supported in GNU/Linux distributions. Don't expect this to work in a fresh installation of Windows or OS X without any additional software. 
