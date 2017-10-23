@@ -10,12 +10,18 @@ int identifyEpisode(char *episode, int digit)
 
   int x = 0;
 
-  if(isdigit(episode[digit]))
+  if(isdigit(episode[digit]) )
     x += (episode[digit] - '0') * 100;
+  else
+    return -1;
   if(isdigit(episode[digit+1]))
     x += (episode[digit+1] - '0') * 10;
-  if(isdigit(episode[digit]))
+  else
+    return x / 100;
+  if(isdigit(episode[digit+2]))
     x += episode[digit+2] - '0';
+  else
+    return x / 10;
 
   return x;
 
@@ -42,12 +48,20 @@ char **scanDirectory(int *scanCount, char prefix[100], char firstEp[4], char las
   DIR *dir;
   struct dirent *ent;
   int i = 0, j, lenPrefix, intFirstEp, intLastEp, num, digit;
-  char tempPrefix[lenPrefix], **temp;
+  char *tempPrefix, **temp;
+
+  if(prefix == NULL)
+  {
+    printf("prefix is null\n");
+    return NULL;
+  }
 
   intFirstEp = atoi(firstEp);
   intLastEp = atoi(lastEp);
   lenPrefix = strlen(prefix) + 1;
+  tempPrefix = malloc(sizeof(char) * lenPrefix);
   printf("\n");
+
   // Attempt to open directory
   if ((dir = opendir(path)) != NULL)
   {
@@ -64,12 +78,14 @@ char **scanDirectory(int *scanCount, char prefix[100], char firstEp[4], char las
         i--;
         continue;
       }
+      // Find element of first number in char array
       digit = findDigit(ent->d_name, tempPrefix);
       if(digit == -1)
       {
         printf("Failed to find digit for %s\nAborting\n", ent->d_name);
         return NULL;
       }
+      // Identify episode number
       num = identifyEpisode(ent->d_name, digit);
       // Ensure episode number is not less than first episode of season
       if(num < intFirstEp)
@@ -112,34 +128,54 @@ char *formEpisode(char **episodes, int scanCount, int count, char season[3], cha
   intLastEp = atoi(lastEp);
   length = lenPrefix + 12;
   num = identifyEpisode(episodes[count], digit);
+
   // Ensure scanned episode # is within the bounds of the entered Season
   if(num < intFirstEp || num > intLastEp)
   {
     printf("Out of season episode detected: %s\n", episodes[count]);
     return NULL;
   }
+
+  // Allocate memory for episode string
   episode = malloc(sizeof(char) * length);
+
   // Fill first parts of episode string with prefix
   for(i = 0; i < lenPrefix - 1; i++)
     episode[i] = prefix[i];
-  // Format rest of the episode string with season, episode, and file extension
+
+  // Format the rest of the episode string with season, episode, and file extension
   episode[i] = ' ';
   episode[i + 1] = 's';
   episode[i + 2] = season[0];
   episode[i + 3] = season[1];
   episode[i + 4] = 'e';
-  if(isdigit(episodes[count][digit]))
+  if(num >= 100)
+  {
     episode[i + 5] = episodes[count][digit];
-  else
-    episode[i + 5] = '0';
-  if(isdigit(episodes[count][digit + 1]))
     episode[i + 6] = episodes[count][digit + 1];
-  else
-    episode[i + 6] = '0';
-  if(isdigit(episodes[count][digit + 1]))
     episode[i + 7] = episodes[count][digit + 2];
+  }
+  else if(num >= 10)
+  {
+    episode[i + 5] = '0';
+    if(episodes[count][digit] != '0')
+    {
+      episode[i + 6] = episodes[count][digit];
+      episode[i + 7] = episodes[count][digit + 1];
+    }
+    else
+    {
+      episode[i + 6] = episodes[count][digit + 1];
+      episode[i + 7] = episodes[count][digit + 2];
+    }
+  }
   else
-    episode[i + 7] = '0';
+  {
+    episode[i + 5] = '0';
+    episode[i + 6] = '0';
+    episode[i + 7] = num + '0';
+  }
+
   // Ensure a file is not improperly renamed to episode 000
   if(episode[i + 7] == '0' && episode[i + 6] == '0' && episode[i + 5] == '0')
   {
@@ -167,10 +203,10 @@ char *formEpisode(char **episodes, int scanCount, int count, char season[3], cha
 
 int main(void)
 {
-
   char path[1024], prefix[100], season[3], firstEp[4], lastEp[4], extension[4], **episodes, *episode, prompt;
   int i, digit, scanCount, epCount;
 
+  // Identify and print current working directory
   getcwd(path, sizeof(path));
   if(path == NULL)
   {
@@ -178,6 +214,8 @@ int main(void)
     return 0;
   }
   printf("Current working directory: %s\n\n", path);
+
+  // Prompt for file naming conventions
   printf("Enter filename prefix.\n");
   fflush(stdout);
   scanf ("%[^\n]%*c", prefix);
@@ -195,8 +233,10 @@ int main(void)
   printf("Enter the three character file extension excluding the period. (Ex. mkv, avi, etc.)\n");
   fflush(stdout);
   scanf("%s", extension);
+
   // Count the number of episodes in the season
-  epCount = (atoi(lastEp)) - (atoi(firstEp));
+  epCount = (atoi(lastEp)) - (atoi(firstEp)) + 1;
+
   // Scan directory and form string array of episode filenames
   episodes = scanDirectory(&scanCount, prefix, firstEp, lastEp, path);
   if(episodes == NULL)
@@ -206,10 +246,11 @@ int main(void)
   }
   if(scanCount != epCount)
   {
-   // printf("Number of items scanned (%d) does not equal number of episodes in season (%d).\nAborting\n", scanCount, epCount);
-   // return 0;
+    printf("Number of items scanned (%d) does not equal number of episodes in season (%d).\nAborting\n", scanCount, epCount);
+    return 0;
   }
   printf("Successfully scanned directory\n");
+
   // Find location of first digit in first string of **episodes
   digit = findDigit(episodes[0], prefix);
   if(digit == -1)
@@ -225,6 +266,7 @@ int main(void)
     printf("You entered %c\nAborting\n", prompt);
     return 0;
   }
+
   // Form individual episode names and then rename actual files in scanned directory
   for(i = 0; i < scanCount; i++)
   {
@@ -239,5 +281,4 @@ int main(void)
   }
 
   return 0;
-
 }
