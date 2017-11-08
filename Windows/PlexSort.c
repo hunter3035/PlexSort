@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <dirent.h>
+#include "dirent.h"
 #include <unistd.h>
 
 void printEpisodes(char **episodes, int epCount)
@@ -146,7 +146,7 @@ char **scanDirectory(int *scanCount, char prefix[100], int firstEp, int lastEp, 
 char *formEpisode(char **episodes, int scanCount, int count, int season, char extension[4], int digit, int firstEp, int lastEp, char prefix[100])
 {
 
-  char *episode, prompt;
+  char *episode;
   int length, i, numEp, lenPrefix;
 
   lenPrefix = strlen(prefix);
@@ -212,22 +212,6 @@ char *formEpisode(char **episodes, int scanCount, int count, int season, char ex
     episode[i + 7] = numEp + '0';
   }
 
-  // Ensure a file is not improperly renamed to episode 000
-  if(episode[i + 7] == '0' && episode[i + 6] == '0' && episode[i + 5] == '0')
-  {
-    printf("File: %s to be renamed as episode '000'. Enter Y to continue or N to abort\n", episodes[count]);
-    while(prompt != 'Y' || prompt != 'y')
-    {
-      scanf("%c", &prompt);
-      if(prompt == 'Y' || prompt == 'y')
-        continue;
-      else if(prompt == 'N' || prompt == 'n')
-        return NULL;
-      else
-        printf("Invalid entry\n");
-    }
-  }
-
   // Insert file extension and terminator at the end of the string
   episode[i + 8] = '.';
   episode[i + 9] = extension[0];
@@ -263,7 +247,7 @@ char **sortEpisodes(char **episodes, int epCount, int firstEp, int digit)
 
 int main(void)
 {
-  char path[1024], prefix[100], extension[4], **episodes, *episode, prompt;
+  char path[1024], prefix[100], extension[4], **episodes, *episode, prompt[2];
   int i, digit, scanCount, epCount, season, firstEp, lastEp;
 
   // Identify current working directory
@@ -333,13 +317,15 @@ int main(void)
   // Print out the newly sorted scanned list of episode filenames
   printEpisodes(episodes, epCount);
 
+  printf("\n");
+  
   // Prompt user to confirm the execution of renaming process
-  printf("Enter 'Y' (capital y) to continue or anything else to abort.\n");
+  printf("Enter 'Y' to continue or anything else to abort.\n");
   fflush(stdout);
-  scanf(" %c", &prompt);
-  if(prompt != 'Y')
+  scanf("%s", prompt);
+  if(stricmp(prompt, "Y") != 0)
   {
-    printf("You entered %c\nAborting\n", prompt);
+    printf("You entered %s\nAborting\n", prompt);
     return 0;
   }
 
@@ -361,6 +347,7 @@ int main(void)
 
     // Print the newly formatted name and then rename the actual file
     printf("%s\n", episode);
+	fflush(stdout);
     rename(episodes[i], episode);
   }
 
