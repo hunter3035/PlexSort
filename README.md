@@ -3,7 +3,7 @@ Bulk renames filenames of TV show episodes according to season in a format easil
 PlexSort is useful when you have a TV series with many episodes and need to rename every episode to a format like "ShowName s01e001.mkv". This program is in its early stages of development and should not, by any means, be considered stable.
 
 # Restrictions
-PlexSort is currently only supported in GNU/Linux and Windows. Don't expect this to work in a fresh installation of macOS without any additional software. This is meant for SSH/CLI administration of headless servers, so no GUI unless someone wants to pay me to make it. Your server doesn't need to be headless or have a SSH service running, but you will need basic Linux command line skills to use PLexSort. 
+PlexSort is currently only supported in GNU/Linux and Windows. Don't expect this to work in a fresh installation of macOS without any additional software. This is meant for SSH/CLI administration of headless servers, so no GUI unless someone wants to pay me to make it. Your server doesn't need to be headless or have a SSH service running, but you will need basic Linux command line skills to use PlexSort. 
 
 Windows support has been very recently added and I'm still working on fixing some of the bugs that came with bringing the code to another OS. Here's the link to the Dirent header that made this possible: https://github.com/tronkko/dirent
 
